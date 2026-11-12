@@ -1,0 +1,65 @@
+
+@startuml
+title 酒店预订系统——顺序图3：顾客取消订单
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Noto Sans CJK SC"
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam sequence {
+    ArrowColor #000000
+    ParticipantBorderColor #1F2D3D
+    ParticipantBackgroundColor #FFFFFF
+    ParticipantFontColor #0000CC
+    ParticipantFontSize 16
+    LifeLineBorderColor #1F2D3D
+    LifeLineBackgroundColor #FFFFFF
+    MessageFontColor #0000CC
+    MessageFontSize 13
+}
+<style>
+participant {
+    Padding 28
+}
+</style>
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+hide footbox
+
+actor "顾客" as Customer
+participant ":顾客界面" as UI
+participant ":预订订单管理" as Booking
+participant ":预订订单" as Order
+participant ":每日库存" as Stock
+participant ":退款记录" as Refund
+participant ":操作日志" as Log
+
+Customer -> UI : 查询本人订单
+UI -> Booking : 请求订单详情
+Booking -> Order : 查询订单状态及入住日期
+Order --> Booking : 返回订单信息
+Booking --> UI : 返回订单详情
+
+Customer -> UI : 提交取消申请
+UI -> Booking : 提交订单号及取消原因
+Booking -> Order : 校验订单状态及入住日期
+Order --> Booking : 返回订单校验结果
+
+Booking -> Stock : 释放对应未来住宿日期库存
+Stock --> Booking : 返回库存释放结果
+
+Booking -> Refund : 按适用规则处理费用及退款记录
+Refund --> Booking : 返回退款记录
+
+Booking -> Order : 将订单状态更新为已取消
+Order --> Booking : 返回状态更新结果
+
+Booking -> Log : 记录取消及退款操作
+Log --> Booking : 返回记录成功
+
+Booking --> UI : 返回取消结果及退款信息
+UI --> Customer : 显示订单取消结果
+
+@enduml
+

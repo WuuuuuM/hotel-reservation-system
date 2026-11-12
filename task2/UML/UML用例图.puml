@@ -1,0 +1,99 @@
+@startuml
+title 酒店预订系统——UML用例图
+
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Noto Sans CJK SC"
+skinparam shadowing false
+skinparam linetype polyline
+skinparam nodesep 45
+skinparam ranksep 60
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #FFFFFF
+skinparam packageBorderColor #666666
+skinparam packageFontColor #222222
+skinparam rectangleBackgroundColor #FFFFFF
+skinparam rectangleBorderColor #333333
+skinparam usecaseBackgroundColor #F2F2F2
+skinparam usecaseBorderColor #333333
+skinparam usecaseFontColor #222222
+skinparam actorBackgroundColor #FFFFFF
+skinparam actorBorderColor #333333
+skinparam actorFontColor #222222
+skinparam ArrowColor #555555
+skinparam defaultTextAlignment center
+
+' 系统外部参与者（与组件图、类图保持一致）
+actor "顾客" as Customer
+actor "酒店工作人员" as Staff
+actor "平台管理员" as Admin
+
+rectangle "酒店预订系统" {
+  ' 按参与者分区仅用于清晰展示，不改变组件图中的功能模块划分
+  package "顾客业务用例" {
+    usecase "注册与登录" as UC_REGISTER
+    usecase "查询酒店房型" as UC_SEARCH
+    usecase "查看每日库存与价格" as UC_AVAIL
+    usecase "提交预订" as UC_CREATE
+    usecase "查询本人订单" as UC_OWNORDER
+    usecase "修改预订" as UC_MODIFY
+    usecase "取消预订" as UC_CANCEL
+    usecase "选择无法履约处理方案" as UC_CHOICE
+    usecase "校验预订条件" as UC_VALIDATE
+  }
+
+  package "酒店工作人员业务用例" {
+    usecase "维护酒店与房型" as UC_HOTEL
+    usecase "维护每日库存与价格" as UC_STOCK
+    usecase "设置停售" as UC_STOP
+    usecase "审核预订" as UC_AUDIT
+    usecase "办理入住与退房" as UC_CHECKIN
+    usecase "处理未入住及无法履约" as UC_EXCEPTION
+    usecase "查询本店订单与统计" as UC_STAFFREPORT
+    usecase "查询本店操作日志" as UC_STAFFLOG
+  }
+
+  package "平台管理员业务用例" {
+    usecase "管理用户与酒店账号" as UC_ACCOUNTS
+    usecase "配置平台审核规则" as UC_RULE
+    usecase "执行授权代操作" as UC_PROXY
+    usecase "复核敏感代操作" as UC_REVIEW
+    usecase "查询全局统计与日志" as UC_GLOBAL
+  }
+}
+
+' 顾客与用例的关联
+Customer -- UC_REGISTER
+Customer -- UC_SEARCH
+Customer -- UC_AVAIL
+Customer -- UC_CREATE
+Customer -- UC_OWNORDER
+Customer -- UC_MODIFY
+Customer -- UC_CANCEL
+Customer -- UC_CHOICE
+
+' 酒店工作人员与用例的关联
+Staff -- UC_HOTEL
+Staff -- UC_STOCK
+Staff -- UC_STOP
+Staff -- UC_AUDIT
+Staff -- UC_CHECKIN
+Staff -- UC_EXCEPTION
+Staff -- UC_STAFFREPORT
+Staff -- UC_STAFFLOG
+
+' 平台管理员与用例的关联
+Admin -- UC_ACCOUNTS
+Admin -- UC_RULE
+Admin -- UC_PROXY
+Admin -- UC_REVIEW
+Admin -- UC_GLOBAL
+
+' 必须执行的公共校验：指向被包含的用例
+UC_CREATE ..> UC_VALIDATE : <<include>>
+UC_MODIFY ..> UC_VALIDATE : <<include>>
+
+' 条件性复核：扩展用例指向基础用例
+UC_REVIEW ..> UC_PROXY : <<extend>>
+
+@enduml

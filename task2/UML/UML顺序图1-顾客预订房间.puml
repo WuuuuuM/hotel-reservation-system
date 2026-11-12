@@ -1,0 +1,58 @@
+
+@startuml
+title 酒店预订系统——顺序图1：顾客预订房间
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Noto Sans CJK SC"
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam sequence {
+    ArrowColor #000000
+    ParticipantBorderColor #1F2D3D
+    ParticipantBackgroundColor #FFFFFF
+    ParticipantFontColor #0000CC
+    ParticipantFontSize 16
+    LifeLineBorderColor #1F2D3D
+    LifeLineBackgroundColor #FFFFFF
+    MessageFontColor #0000CC
+    MessageFontSize 13
+}
+<style>
+participant {
+    Padding 28
+}
+</style>
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+hide footbox
+
+actor "顾客" as Customer
+participant ":顾客界面" as UI
+participant ":酒店查询" as Search
+participant ":库存与价格管理" as Stock
+participant ":预订订单管理" as Booking
+participant ":预订订单" as Order
+participant ":操作日志" as Log
+
+Customer -> UI : 输入城市、入住日期、离店日期及人数
+UI -> Search : 查询酒店和可用房型
+Search -> Stock : 查询每日库存和价格
+Stock --> Search : 返回房型可用情况及价格
+Search --> UI : 返回酒店和房型列表
+
+Customer -> UI : 选择房型并提交预订
+UI -> Booking : 提交预订信息
+Booking -> Stock : 校验并占用所选日期库存
+Stock --> Booking : 返回库存校验及占用结果
+
+Booking -> Order : 创建预订订单并保存成交价格
+Order --> Booking : 返回订单号及初始状态
+
+Booking -> Log : 记录订单创建和库存操作
+Log --> Booking : 返回记录成功
+
+Booking --> UI : 返回订单号及订单状态
+UI --> Customer : 显示预订结果
+
+@enduml

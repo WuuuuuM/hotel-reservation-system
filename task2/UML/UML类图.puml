@@ -1,0 +1,338 @@
+
+@startuml
+title 酒店预订系统——UML类图
+
+' ==============================
+' 一、全局样式
+' ==============================
+
+top to bottom direction
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Noto Sans CJK SC"
+skinparam defaultFontSize 13
+skinparam shadowing false
+
+skinparam linetype ortho
+skinparam nodesep 28
+skinparam ranksep 38
+
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #FFFFFF
+skinparam packageBorderColor #666666
+skinparam packageFontColor #222222
+
+skinparam classBackgroundColor #F2F2F2
+skinparam classHeaderBackgroundColor #E3E3E3
+skinparam classBorderColor #444444
+skinparam classFontColor #222222
+skinparam classArrowColor #555555
+skinparam classAttributeIconSize 0
+
+skinparam ArrowColor #555555
+skinparam defaultTextAlignment center
+
+hide empty members
+hide circle
+
+' ==============================
+' 二、用户与权限管理
+' ==============================
+
+package "用户与权限管理" as P_USER {
+
+  enum "用户角色" as UserRole {
+    顾客
+    酒店工作人员
+    平台管理员
+  }
+
+  class "用户" as User {
+    - 用户ID: Long
+    - 用户名: String
+    - 手机号: String
+    - 密码哈希: String
+    - 角色: 用户角色
+    --
+    + 校验权限(操作): Boolean
+  }
+
+  UserRole -[hidden]right- User
+}
+
+' ==============================
+' 三、酒店与房型管理
+' ==============================
+
+package "酒店与房型管理" as P_HOTEL {
+
+  class "酒店" as Hotel {
+    - 酒店ID: Long
+    - 酒店编码: String
+    - 名称: String
+    - 城市: String
+    - 地址: String
+    - 联系方式: String
+    --
+    + 更新基本信息(): void
+  }
+
+  class "房型" as RoomType {
+    - 房型ID: Long
+    - 房型编码: String
+    - 房型名称: String
+    - 最大入住人数: Integer
+    --
+    + 校验入住人数(人数): Boolean
+  }
+
+  class "房间" as Room {
+    - 房间ID: Long
+    - 房间号: String
+    --
+    + 更新房间信息(): void
+  }
+}
+
+' ==============================
+' 四、库存、价格与停售管理
+' ==============================
+
+package "库存、价格与停售管理" as P_STOCK {
+
+  class "每日库存" as Stock {
+    - 日期: Date
+    - 总房量: Integer
+    - 可用房量: Integer
+    --
+    + 校验库存(数量): Boolean
+    + 占用库存(数量): Boolean
+    + 释放库存(数量): void
+  }
+
+  class "每日价格" as DailyPrice {
+    - 日期: Date
+    - 当日价格: Decimal
+    --
+    + 修改价格(新价): void
+  }
+
+  class "停售记录" as StopSale {
+    - 停售ID: Long
+    - 开始日期: Date
+    - 结束日期: Date
+    - 原因: String
+    --
+    + 是否停售(日期): Boolean
+  }
+
+  Stock -[hidden]down- DailyPrice
+  DailyPrice -[hidden]down- StopSale
+}
+
+' ==============================
+' 五、平台规则与代操作审批
+' ==============================
+
+package "平台规则与代操作审批" as P_RULE {
+
+  class "平台规则" as Rule {
+    - 需要酒店审核: Boolean = false
+    - 普通待确认时限分钟: Integer = 10
+    --
+    + 更新审核规则(): void
+  }
+
+  class "代操作审批" as Approval {
+    - 审批ID: Long
+    - 操作类型: String
+    - 操作对象ID: String
+    - 操作原因: String
+    - 发起管理员ID: Long
+    - 复核管理员ID: Long
+    - 审批结果: String
+    --
+    + 提交复核(): void
+    + 执行复核(): void
+  }
+
+  Rule -[hidden]down- Approval
+}
+
+' ==============================
+' 六、预订与订单管理
+' ==============================
+
+package "预订与订单管理" as P_BOOKING {
+
+  enum "订单状态" as BookingStatus {
+    待确认
+    已确认
+    已入住
+    已退房
+    已取消
+    未入住
+    已拒绝
+  }
+
+  class "预订订单" as Booking {
+    - 订单号: String
+    - 入住日期: Date
+    - 离店日期: Date
+    - 入住人数: Integer
+    - 联系人: String
+    - 成交金额: Decimal
+    - 状态: 订单状态
+    - 创建时间: DateTime
+    - 修改时间: DateTime
+    - 取消原因: String
+    --
+    + 修改预订(): Boolean
+    + 取消预订(): Boolean
+    + 变更状态(目标状态): Boolean
+  }
+
+  class "入住登记" as CheckIn {
+    - 登记ID: Long
+    - 入住登记时间: DateTime
+    - 退房登记时间: DateTime
+    --
+    + 办理入住(): void
+    + 办理退房(): void
+  }
+
+  BookingStatus -[hidden]right- Booking
+}
+
+' ==============================
+' 七、异常与退款处理
+' ==============================
+
+package "异常与退款处理" as P_REFUND {
+
+  class "退款记录" as Refund <<设计预留>> {
+    - 退款ID: Long
+    - 退款金额: Decimal
+    - 触发时间: DateTime
+    - 发起时间: DateTime
+    - 处理状态: String
+    --
+    + 发起退款(): void
+  }
+}
+
+' ==============================
+' 八、统计与操作日志
+' ==============================
+
+package "统计与操作日志" as P_LOG {
+
+  class "操作日志" as Log {
+    - 日志ID: Long
+    - 操作人ID: Long
+    - 被代理人ID: Long
+    - 关联订单号: String
+    - 关联酒店ID: Long
+    - 关联审批ID: Long
+    - 操作时间: DateTime
+    - 操作类型: String
+    - 操作对象: String
+    - 操作前后值: String
+    - 原因: String
+    --
+    + 记录操作(): void
+  }
+}
+
+' ==============================
+' 九、隐藏布局约束
+' 仅控制排版，不显示为 UML 关系
+'
+' 预期布局：
+' 用户权限 | 酒店房型 | 库存价格
+' 平台规则 | 预订订单 | 异常退款
+'          | 操作日志 |
+' ==============================
+
+P_USER -[hidden]right- P_HOTEL
+P_HOTEL -[hidden]right- P_STOCK
+
+P_USER -[hidden]down- P_RULE
+P_HOTEL -[hidden]down- P_BOOKING
+P_STOCK -[hidden]down- P_REFUND
+
+P_RULE -[hidden]right- P_BOOKING
+P_BOOKING -[hidden]right- P_REFUND
+
+P_BOOKING -[hidden]down- P_LOG
+
+' ==============================
+' 十、酒店、房型、库存关联
+' ==============================
+
+Hotel "1" -right- "0..*" RoomType
+RoomType "1" -right- "0..*" Room
+
+RoomType "1" -right- "0..*" Stock
+RoomType "1" -right- "0..*" DailyPrice
+
+Hotel "1" -right- "0..*" StopSale
+RoomType "0..1" -right- "0..*" StopSale
+
+' ==============================
+' 十一、用户、酒店、订单关联
+' ==============================
+
+User "1" -down- "0..*" Booking
+
+Hotel "1" -down- "0..*" Booking
+RoomType "1" -down- "0..*" Booking
+
+' 工作人员的酒店管理授权
+User "0..*" -right- "0..*" Hotel : 管理授权
+
+' ==============================
+' 十二、订单及附属记录
+' ==============================
+
+Booking "1" *-right- "0..1" CheckIn
+
+Booking "1" -right- "0..*" Refund
+
+' ==============================
+' 十三、代操作审批关联
+' ==============================
+
+User "1" -- "0..*" Approval : 发起管理员
+
+User "0..1" -- "0..*" Approval : 复核管理员
+
+' ==============================
+' 十四、操作日志关联
+' ==============================
+
+User "0..1" -- "0..*" Log : 操作人
+
+Booking "0..1" -- "0..*" Log : 关联订单
+
+Hotel "0..1" -- "0..*" Log : 关联酒店
+
+Approval "0..1" -- "0..*" Log : 关联审批
+
+' ==============================
+' 十五、补充业务约束
+' ==============================
+
+' 管理授权仅适用于酒店工作人员，
+' 普通顾客不具有酒店管理权限。
+
+' 审批的发起管理员与复核管理员必须不同。
+' 复核尚未完成时，复核管理员可以为空。
+
+' 日志不一定关联订单、酒店或审批，
+' 例如登录日志可能仅关联操作人。
+
+' 平台规则是全局配置，
+' 不需要与每张预订订单建立持久关联。
+
+@enduml

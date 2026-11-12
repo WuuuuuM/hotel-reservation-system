@@ -1,0 +1,61 @@
+
+@startuml
+title 酒店预订系统——顺序图2：酒店审核订单
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Noto Sans CJK SC"
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam sequence {
+    ArrowColor #000000
+    ParticipantBorderColor #1F2D3D
+    ParticipantBackgroundColor #FFFFFF
+    ParticipantFontColor #0000CC
+    ParticipantFontSize 16
+    LifeLineBorderColor #1F2D3D
+    LifeLineBackgroundColor #FFFFFF
+    MessageFontColor #0000CC
+    MessageFontSize 13
+}
+<style>
+participant {
+    Padding 28
+}
+</style>
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+hide footbox
+
+actor "酒店工作人员" as Staff
+participant ":酒店工作人员界面" as UI
+participant ":预订订单管理" as Booking
+participant ":预订订单" as Order
+participant ":库存管理" as Stock
+participant ":操作日志" as Log
+
+Staff -> UI : 打开待审核订单列表
+UI -> Booking : 查询本店待确认订单
+Booking -> Order : 查询订单详情
+Order --> Booking : 返回订单信息
+Booking --> UI : 返回待审核订单列表
+
+Staff -> UI : 选择订单并提交审核结果
+UI -> Booking : 提交审核意见及原因
+Booking -> Order : 校验订单状态和所属酒店
+Order --> Booking : 返回订单校验结果
+
+Booking -> Stock : 处理订单库存（拒绝时释放）
+Stock --> Booking : 返回库存处理结果
+
+Booking -> Order : 更新订单状态（已确认或已拒绝）
+Order --> Booking : 返回状态更新结果
+
+Booking -> Log : 记录审核人员、结果及原因
+Log --> Booking : 返回记录成功
+
+Booking --> UI : 返回审核结果
+UI --> Staff : 显示审核结果
+
+@enduml
+

@@ -1,0 +1,63 @@
+
+@startuml
+title 酒店预订系统——顺序图4：顾客退房
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Noto Sans CJK SC"
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam sequence {
+    ArrowColor #000000
+    ParticipantBorderColor #1F2D3D
+    ParticipantBackgroundColor #FFFFFF
+    ParticipantFontColor #0000CC
+    ParticipantFontSize 16
+    LifeLineBorderColor #1F2D3D
+    LifeLineBackgroundColor #FFFFFF
+    MessageFontColor #0000CC
+    MessageFontSize 13
+}
+<style>
+participant {
+    Padding 28
+}
+</style>
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+hide footbox
+
+actor "顾客" as Customer
+actor "酒店工作人员" as Staff
+participant ":酒店工作人员界面" as UI
+participant ":预订订单管理" as Booking
+participant ":预订订单" as Order
+participant ":入住登记" as CheckIn
+participant ":操作日志" as Log
+
+Customer -> Staff : 提出退房请求并提供订单号
+Staff -> UI : 查询订单并办理退房
+UI -> Booking : 查询订单及当前状态
+Booking -> Order : 查询订单状态
+Order --> Booking : 返回订单信息
+Booking --> UI : 返回订单详情
+
+Staff -> UI : 核对信息并确认退房
+UI -> Booking : 提交退房操作
+Booking -> Order : 再次校验订单状态
+Order --> Booking : 返回已入住状态
+
+Booking -> CheckIn : 更新实际退房登记时间
+CheckIn --> Booking : 返回登记成功
+
+Booking -> Order : 将订单状态更新为已退房
+Order --> Booking : 返回状态更新结果
+
+Booking -> Log : 记录退房时间及操作人
+Log --> Booking : 返回记录成功
+
+Booking --> UI : 返回退房办理成功
+UI --> Staff : 显示办理结果
+Staff -> Customer : 确认退房完成
+
+@enduml

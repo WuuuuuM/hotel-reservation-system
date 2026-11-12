@@ -1,0 +1,65 @@
+@startuml
+title 酒店预订系统——UML组件图
+
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Noto Sans CJK SC"
+skinparam componentStyle uml1
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 35
+skinparam ranksep 48
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #FFFFFF
+skinparam packageBorderColor #666666
+skinparam componentBackgroundColor #F2F2F2
+skinparam componentBorderColor #333333
+skinparam ArrowColor #555555
+skinparam defaultTextAlignment center
+
+package "用户界面层" {
+  component "用户界面\n(顾客 / 酒店工作人员 / 平台管理员)" as UI
+}
+
+package "业务服务层" {
+  component "用户与权限管理" as AUTH
+  component "酒店与房型管理" as HOTEL
+  component "库存、价格与停售管理" as STOCK
+  component "酒店查询" as SEARCH
+  component "预订与订单管理\n(含审核、修改、取消、入住退房)" as ORDER
+  component "异常与退款处理\n(含未入住、通知)" as EXCEPTION
+  component "平台规则与代操作审批" as RULE
+  component "统计与操作日志" as REPORT
+}
+
+package "数据持久化层" {
+  component "业务数据存储" as DATA
+}
+
+' 界面调用主要业务组件
+UI ..> AUTH
+UI ..> SEARCH
+UI ..> HOTEL
+UI ..> ORDER
+UI ..> RULE
+UI ..> REPORT
+
+' 关键业务依赖
+SEARCH ..> HOTEL
+SEARCH ..> STOCK
+HOTEL ..> STOCK
+ORDER ..> STOCK : 校验/占用/释放
+ORDER ..> RULE : 审核规则
+EXCEPTION ..> ORDER
+EXCEPTION ..> STOCK
+RULE ..> AUTH
+REPORT ..> ORDER
+
+' 主要数据读写依赖（其余数据访问细节在类图中展开）
+AUTH ..> DATA
+HOTEL ..> DATA
+STOCK ..> DATA
+ORDER ..> DATA
+REPORT ..> DATA
+
+@enduml
