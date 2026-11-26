@@ -4,3 +4,6 @@ data/*.sqlite3
 __pycache__/
 code/__pycache__/
 .ipynb_checkpoints/
+**/.ipynb_checkpoints/
+**/*-checkpoint.py
+**/__pycache__/
